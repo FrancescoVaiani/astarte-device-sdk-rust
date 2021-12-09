@@ -41,6 +41,12 @@ struct Cli {
 async fn main() -> Result<(), AstarteError> {
     env_logger::init();
 
+    loop {
+        program_main().await?;
+    }
+}
+
+async fn program_main() -> Result<(), AstarteError> {
     let Cli {
         realm,
         device_id,
@@ -53,6 +59,7 @@ async fn main() -> Result<(), AstarteError> {
     let sdk_options = AstarteOptions::new(&realm, &device_id, &credentials_secret, &pairing_url)
         .interface_directory("./examples/interfaces")?
         .database(db)
+        .ignore_ssl_errors()
         .build();
 
     let mut device = astarte_sdk::AstarteSdk::new(&sdk_options).await?;
@@ -87,7 +94,10 @@ async fn main() -> Result<(), AstarteError> {
                     }
                 }
             }
-            Err(err) => log::error!("{:?}", err),
+            Err(err) => {
+                log::error!("{:?}", err);
+                return Ok(());
+            }
         }
     }
 }
